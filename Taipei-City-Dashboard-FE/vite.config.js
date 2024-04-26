@@ -37,6 +37,7 @@ export default defineConfig({
 				rewrite: (path) => path.replace(/^\/geo_server/, ""),
 			},
 		},
+		// 熱重載
 		watch: {
 			usePolling: true,
 		},
