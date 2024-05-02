@@ -196,7 +196,8 @@ export const useMapStore = defineStore("map", {
 		},
 
 		// 6. Toggle track user location marker
-		// If the toggle is true, the user location marker is displayed, and it is positioned in the center of the map.
+		// If the toggle is true, the user location marker is displayed.
+		// And it is positioned in the center of the map (animation).
 		// Otherwise, the user location marker is removed.
 		toggleTrackUserLocationMarker(status) {
 			if (status) {

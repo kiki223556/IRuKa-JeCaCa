@@ -182,7 +182,7 @@ function shouldDisable(map_config) {
 						}
 					"
 				/>
-				<h2>基本圖層ssssss</h2>
+				<h2>基本圖層</h2>
 				<DashboardComponent
 					v-for="item in contentStore.mapLayers"
 					:key="`map-layer-${item.index}-${contentStore.currentDashboard.index}`"
