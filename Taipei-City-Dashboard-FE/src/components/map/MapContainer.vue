@@ -71,7 +71,7 @@ onMounted(() => {
 				</button>
 				<button
 					:style="{
-						color: villageLayer
+						color: trackUserLocation
 							? 'var(--color-highlight)'
 							: 'var(--color-component-background)',
 					}"
