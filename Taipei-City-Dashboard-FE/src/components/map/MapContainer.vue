@@ -26,6 +26,7 @@ function toggleVillageLayer() {
 	mapStore.toggleVillageBoundaries(villageLayer.value);
 }
 
+// Add toggle track user location
 function toggleTrackUserLocation() {
 	trackUserLocation.value = !trackUserLocation.value;
 	mapStore.toggleTrackUserLocationMarker(trackUserLocation.value);
@@ -70,7 +71,7 @@ onMounted(() => {
 				</button>
 				<button
 					:style="{
-						color: villageLayer
+						color: trackUserLocation
 							? 'var(--color-highlight)'
 							: 'var(--color-component-background)',
 					}"
