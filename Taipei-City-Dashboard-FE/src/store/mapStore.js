@@ -71,6 +71,15 @@ export const useMapStore = defineStore("map", {
 				style: mapStyle,
 			});
 			this.map.addControl(new mapboxGl.NavigationControl());
+			this.map.addControl(
+				new mapboxGl.GeolocateControl({
+					positionOptions: {
+						enableHighAccuracy: true,
+					},
+					trackUserLocation: true,
+					showUserHeading: true,
+				})
+			);
 			this.map.doubleClickZoom.disable();
 			this.map
 				.on("load", () => {
@@ -155,6 +164,7 @@ export const useMapStore = defineStore("map", {
 				"metro",
 				"triangle_green",
 				"triangle_white",
+				"dog",
 				"bike_green",
 				"bike_orange",
 				"bike_red",
@@ -199,25 +209,25 @@ export const useMapStore = defineStore("map", {
 		// If the toggle is true, the user location marker is displayed.
 		// And it is positioned in the center of the map (animation).
 		// Otherwise, the user location marker is removed.
-		toggleTrackUserLocationMarker(status) {
-			if (status) {
-				navigator.geolocation.getCurrentPosition((position) => {
-					const { latitude, longitude } = position.coords;
-					this.userMarker = new mapboxGl.Marker()
-						.setLngLat([longitude, latitude])
-						.addTo(this.map);
-					this.map.flyTo({
-						center: [longitude, latitude],
-						essential: true,
-					});
-				});
-			} else {
-				if (this.userMarker) {
-					this.userMarker.remove();
-					this.userMarker = null;
-				}
-			}
-		},
+		// toggleTrackUserLocationMarker(status) {
+		// 	if (status) {
+		// 		navigator.geolocation.getCurrentPosition((position) => {
+		// 			const { latitude, longitude } = position.coords;
+		// 			this.userMarker = new mapboxGl.Marker()
+		// 				.setLngLat([longitude, latitude])
+		// 				.addTo(this.map);
+		// 			this.map.flyTo({
+		// 				center: [longitude, latitude],
+		// 				essential: true,
+		// 			});
+		// 		});
+		// 	} else {
+		// 		if (this.userMarker) {
+		// 			this.userMarker.remove();
+		// 			this.userMarker = null;
+		// 		}
+		// 	}
+		// },
 
 		/* Adding Map Layers */
 		// 1. Passes in the map_config (an Array of Objects) of a component and adds all layers to the map layer list

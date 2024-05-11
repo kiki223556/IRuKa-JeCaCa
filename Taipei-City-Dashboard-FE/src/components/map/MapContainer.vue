@@ -27,10 +27,10 @@ function toggleVillageLayer() {
 }
 
 // Add toggle track user location
-function toggleTrackUserLocation() {
-	trackUserLocation.value = !trackUserLocation.value;
-	mapStore.toggleTrackUserLocationMarker(trackUserLocation.value);
-}
+// function toggleTrackUserLocation() {
+// 	trackUserLocation.value = !trackUserLocation.value;
+// 	mapStore.toggleTrackUserLocationMarker(trackUserLocation.value);
+// }
 
 onMounted(() => {
 	mapStore.initializeMapBox();
@@ -69,7 +69,7 @@ onMounted(() => {
 				>
 					里
 				</button>
-				<button
+				<!-- <button
 					:style="{
 						color: trackUserLocation
 							? 'var(--color-highlight)'
@@ -78,7 +78,7 @@ onMounted(() => {
 					@click="toggleTrackUserLocation"
 				>
 					我
-				</button>
+				</button> -->
 				<button
 					class="show-if-mobile"
 					@click="dialogStore.showDialog('mobileLayers')"
@@ -249,7 +249,7 @@ onMounted(() => {
 	&-layers {
 		position: absolute;
 		right: 10px;
-		top: 104px;
+		top: 145px;
 		z-index: 1;
 		display: flex;
 		flex-direction: column;

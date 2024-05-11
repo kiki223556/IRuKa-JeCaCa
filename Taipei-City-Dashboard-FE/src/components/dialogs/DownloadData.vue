@@ -3,18 +3,26 @@
 <!-- Developed by Taipei Urban Intelligence Center 2023-2024-->
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watchEffect } from "vue";
+
 import { useDialogStore } from "../../store/dialogStore";
+import { useContentStore } from "../../store/contentStore";
 
 import { jsonToCsv } from "../../assets/utilityFunctions/jsonToCsv";
 import DialogContainer from "./DialogContainer.vue";
+import axios from "axios";
 
 const dialogStore = useDialogStore();
+const contentStore = useContentStore();
 
+// Stores the inputted dashboard index
+const index = ref(dialogStore.moreInfoContent.index);
 // Stores the inputted dashboard name
 const name = ref(dialogStore.moreInfoContent.name);
 // Stores the file type
 const fileType = ref("JSON");
+
+console.log("dialogStore", dialogStore);
 
 const parsedJson = computed(() => {
 	let json = {};
@@ -22,8 +30,8 @@ const parsedJson = computed(() => {
 	if (dialogStore.moreInfoContent.chart_config.categories) {
 		json.categories = dialogStore.moreInfoContent.chart_config.categories;
 	}
-
 	const jsonString = encodeURIComponent(JSON.stringify(json));
+
 	// const base64Json = btoa(jsonString)
 	return jsonString;
 });
@@ -38,86 +46,121 @@ const parsedCsv = computed(() => {
 	return encodeURI(csvString);
 });
 
+// Downdoad geojson data
+const parsedGeoJson = ref("");
+watchEffect(async () => {
+	try {
+		const rs = await axios.get(`/mapData/${index.value}.geojson`);
+		let geoJson = { data: rs.data };
+		if (dialogStore.moreInfoContent.chart_config.categories) {
+			geoJson.categories =
+				dialogStore.moreInfoContent.chart_config.categories;
+		}
+		const jsonString = encodeURIComponent(JSON.stringify(geoJson));
+		parsedGeoJson.value = jsonString;
+	} catch (e) {
+		console.error(e);
+		parsedGeoJson.value = "";
+	}
+});
+
 function handleSubmit() {
 	handleClose();
 }
 function handleClose() {
+	index.value = dialogStore.moreInfoContent.index;
 	name.value = dialogStore.moreInfoContent.name;
 	dialogStore.dialogs.downloadData = false;
 }
 </script>
 
 <template>
-  <DialogContainer
-    :dialog="`downloadData`"
-    @on-close="handleClose"
-  >
-    <div class="downloaddata">
-      <h2>下載資料</h2>
-      <div class="downloaddata-input">
-        <h3>請輸入檔名</h3>
-        <input
-          v-model="name"
-          type="text"
-          :minlength="1"
-          required
-        >
-      </div>
-      <h3>請選擇檔案格式</h3>
-      <div>
-        <input
-          id="JSON"
-          v-model="fileType"
-          class="downloaddata-radio"
-          type="radio"
-          value="JSON"
-        >
-        <label for="JSON">
-          <div />
-          JSON
-        </label>
-        <input
-          id="CSV"
-          v-model="fileType"
-          class="downloaddata-radio"
-          type="radio"
-          value="CSV"
-        >
-        <label for="CSV">
-          <div />
-          CSV (UTF-8)
-        </label>
-      </div>
-      <div class="downloaddata-control">
-        <button
-          class="downloaddata-control-cancel"
-          @click="handleClose"
-        >
-          取消
-        </button>
-        <button
-          v-if="name && fileType === 'JSON'"
-          class="downloaddata-control-confirm"
-          @click="handleSubmit"
-        >
-          <a
-            :href="`data:application/json;charset=utf-8,${parsedJson}`"
-            :download="`${name}.json`"
-          >下載JSON</a>
-        </button>
-        <button
-          v-if="name && fileType === 'CSV'"
-          class="downloaddata-control-confirm"
-          @click="handleSubmit"
-        >
-          <a
-            :href="`data:text/csv;charset=utf-8,${parsedCsv}`"
-            :download="`${name}.csv`"
-          >下載CSV</a>
-        </button>
-      </div>
-    </div>
-  </DialogContainer>
+	<DialogContainer :dialog="`downloadData`" @on-close="handleClose">
+		<div class="downloaddata">
+			<h2>下載資料</h2>
+			<div class="downloaddata-input">
+				<h3>請輸入檔名</h3>
+				<input v-model="name" type="text" :minlength="1" required />
+			</div>
+			<h3>請選擇檔案格式</h3>
+			<div>
+				<input
+					id="JSON"
+					v-model="fileType"
+					class="downloaddata-radio"
+					type="radio"
+					value="JSON"
+				/>
+				<label for="JSON">
+					<div />
+					JSON
+				</label>
+				<input
+					id="CSV"
+					v-model="fileType"
+					class="downloaddata-radio"
+					type="radio"
+					value="CSV"
+				/>
+				<label for="CSV">
+					<div />
+					CSV (UTF-8)
+				</label>
+				<input
+					id="GEOJSON"
+					v-model="fileType"
+					class="downloaddata-radio"
+					type="radio"
+					value="GEOJSON"
+				/>
+				<label for="GEOJSON">
+					<div />
+					GEOJSON
+				</label>
+			</div>
+			<div class="downloaddata-control">
+				<button
+					class="downloaddata-control-cancel"
+					@click="handleClose"
+				>
+					取消
+				</button>
+				<button
+					v-if="name && fileType === 'JSON'"
+					class="downloaddata-control-confirm"
+					@click="handleSubmit"
+				>
+					<a
+						:href="`data:application/json;charset=utf-8,${parsedJson}`"
+						:download="`${name}.json`"
+						>下載JSON</a
+					>
+				</button>
+				<button
+					v-if="name && fileType === 'CSV'"
+					class="downloaddata-control-confirm"
+					@click="handleSubmit"
+				>
+					<a
+						:href="`data:text/csv;charset=utf-8,${parsedCsv}`"
+						:download="`${name}.csv`"
+						>下載CSV</a
+					>
+				</button>
+				<button
+					v-if="name && fileType === 'GEOJSON'"
+					class="downloaddata-control-confirm"
+					@click="handleSubmit"
+				>
+					<a
+						:href="`data:application/geojson;charset=utf-8,${parsedGeoJson}`"
+						:download="`${name}.geojson`"
+						>下載GEOJSON</a
+					>
+				</button>
+			</div>
+		</div>
+	</DialogContainer>
 </template>
 
 <style scoped lang="scss">
