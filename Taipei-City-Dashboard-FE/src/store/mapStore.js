@@ -76,8 +76,9 @@ export const useMapStore = defineStore("map", {
 				.on("load", () => {
 					this.initializeBasicLayers();
 				})
-				.on("click", (event) => {
+				.on("mousemove", (event) => {
 					if (this.popup) {
+						this.popup.remove();
 						this.popup = null;
 					}
 					this.addPopup(event);
@@ -641,11 +642,19 @@ export const useMapStore = defineStore("map", {
 				mapConfigs.push(this.mapConfigs[clickFeatureDatas[i].layer.id]);
 				parsedPopupContent.push(clickFeatureDatas[i]);
 			}
+			// Disable map mouse events
+			this.map.getCanvas().style.pointerEvents = "none";
 			// Create a new mapbox popup
-			this.popup = new mapboxGl.Popup()
+			this.popup = new mapboxGl.Popup({
+				offset: [0, -5], // 調整彈出視窗位置，使其不覆蓋鼠標
+			})
 				.setLngLat(event.lngLat)
 				.setHTML('<div id="vue-popup-content"></div>')
-				.addTo(this.map);
+				.addTo(this.map)
+				.on("close", () => {
+					// Re-enable map mouse events when the popup is closed
+					this.map.getCanvas().style.pointerEvents = "auto";
+				});
 			// Mount a vue component (MapPopup) to the id "vue-popup-content" and pass in data
 			const PopupComponent = defineComponent({
 				extends: MapPopup,
@@ -663,6 +672,15 @@ export const useMapStore = defineStore("map", {
 				const app = createApp(PopupComponent);
 				app.mount("#vue-popup-content");
 			});
+			this.popup.getElement().addEventListener("mouseleave", () => {
+				this.popup.remove();
+			});
+			this.map.on("click", () => {
+				this.popup.remove();
+			});
+			setTimeout(() => {
+				this.map.getCanvas().style.pointerEvents = "auto";
+			}, 1500);
 		},
 		// 2. Remove the current popup
 		removePopup() {
