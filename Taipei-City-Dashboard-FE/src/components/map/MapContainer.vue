@@ -14,7 +14,7 @@ const contentStore = useContentStore();
 
 const districtLayer = ref(false);
 const villageLayer = ref(false);
-const trackUserLocation = ref(false);
+// const trackUserLocation = ref(false);
 
 function toggleDistrictLayer() {
 	districtLayer.value = !districtLayer.value;
