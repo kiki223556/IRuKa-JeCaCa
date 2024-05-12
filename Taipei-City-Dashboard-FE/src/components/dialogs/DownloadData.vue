@@ -3,7 +3,7 @@
 <!-- Developed by Taipei Urban Intelligence Center 2023-2024-->
 
 <script setup>
-import { ref, computed, watchEffect } from "vue";
+import { ref, computed, watchEffect, toRaw } from "vue";
 
 import { useDialogStore } from "../../store/dialogStore";
 import { useContentStore } from "../../store/contentStore";
@@ -22,7 +22,22 @@ const name = ref(dialogStore.moreInfoContent.name);
 // Stores the file type
 const fileType = ref("JSON");
 
-console.log("dialogStore", dialogStore);
+// const parseMapLayers = computed(() => {
+// 	const hasMap = contentStore.currentDashboard.components?.filter(
+// 		(item) => item.map_config[0]
+// 	);
+// 	const noMap = contentStore.currentDashboard.components?.filter(
+// 		(item) => !item.map_config[0]
+// 	);
+
+// 	return { hasMap: hasMap, noMap: noMap };
+// });
+
+const hasMap = computed(() => {
+	return contentStore.currentDashboard.components?.filter(
+		(item) => item.map_config[0]
+	);
+});
 
 const parsedJson = computed(() => {
 	let json = {};
@@ -47,20 +62,44 @@ const parsedCsv = computed(() => {
 });
 
 // Downdoad geojson data
-const parsedGeoJson = ref("");
+const parsedGeoJson = ref([]);
+
 watchEffect(async () => {
 	try {
-		const rs = await axios.get(`/mapData/${index.value}.geojson`);
-		let geoJson = { data: rs.data };
-		if (dialogStore.moreInfoContent.chart_config.categories) {
-			geoJson.categories =
-				dialogStore.moreInfoContent.chart_config.categories;
+		const mapConfig = toRaw(dialogStore.moreInfoContent.map_config);
+
+		if (mapConfig && mapConfig.length > 0) {
+			for (let i = 0; i < mapConfig.length; i++) {
+				const index = mapConfig[i]?.index;
+				if (index) {
+					const rs = await axios.get(`/mapData/${index}.geojson`);
+					let geoJson = { data: rs.data };
+					if (dialogStore.moreInfoContent.chart_config.categories) {
+						geoJson.categories =
+							dialogStore.moreInfoContent.chart_config.categories;
+					}
+					const jsonString = encodeURIComponent(
+						JSON.stringify(geoJson)
+					);
+					parsedGeoJson.value.push(jsonString); // Push directly to the array
+				}
+			}
+		} else {
+			const index = index.value;
+			if (index) {
+				const rs = await axios.get(`/mapData/${index}.geojson`);
+				let geoJson = { data: rs.data };
+				if (dialogStore.moreInfoContent.chart_config.categories) {
+					geoJson.categories =
+						dialogStore.moreInfoContent.chart_config.categories;
+				}
+				const jsonString = encodeURIComponent(JSON.stringify(geoJson));
+				parsedGeoJson.value.push(jsonString); // Push directly to the array
+			}
 		}
-		const jsonString = encodeURIComponent(JSON.stringify(geoJson));
-		parsedGeoJson.value = jsonString;
 	} catch (e) {
 		console.error(e);
-		parsedGeoJson.value = "";
+		parsedGeoJson.value = [];
 	}
 });
 
@@ -113,7 +152,10 @@ function handleClose() {
 					type="radio"
 					value="GEOJSON"
 				/>
-				<label for="GEOJSON">
+				<label
+					v-if="hasMap.some((item) => item.index === index)"
+					for="GEOJSON"
+				>
 					<div />
 					GEOJSON
 				</label>
@@ -149,14 +191,17 @@ function handleClose() {
 				</button>
 				<button
 					v-if="name && fileType === 'GEOJSON'"
+					v-for="(item, index) in parsedGeoJson"
+					:key="index"
 					class="downloaddata-control-confirm"
 					@click="handleSubmit"
 				>
 					<a
-						:href="`data:application/geojson;charset=utf-8,${parsedGeoJson}`"
-						:download="`${name}.geojson`"
-						>下載GEOJSON</a
+						:href="`data:application/geojson;charset=utf-8,${item}`"
+						:download="`${name}_${index}.geojson`"
 					>
+						下載{{ index + 1 }}
+					</a>
 				</button>
 			</div>
 		</div>
